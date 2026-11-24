@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tung Games</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#100d20;color:white;font-family:Arial,sans-serif}
+header{padding:22px 7%;background:#19142d;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
+.logo{font-size:27px;font-weight:900;color:#a78bfa}
+header span{color:#c4b5fd}
+main{max-width:1100px;margin:auto;padding:35px 20px}
+.hero{text-align:center;padding:35px 10px}
+.hero h1{font-size:clamp(35px,7vw,60px);margin:0 0 12px}
+.hero p{color:#c4bdd8}
+input{padding:14px;border:1px solid #51436f;border-radius:12px;background:#211a36;color:white;width:100%;max-width:420px;font-size:16px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin:25px 0}
+button{border:0;border-radius:10px;padding:11px 16px;background:#7955db;color:white;font-weight:bold;cursor:pointer}
+button:hover{filter:brightness(1.2)}
+.filters button{background:#29213e}
+.filters button.active{background:#7955db}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:17px}
+.card{background:#211a36;border:1px solid #382c55;border-radius:17px;padding:20px;min-height:170px}
+.emoji{font-size:38px}
+.card h3{margin:12px 0 7px}
+.card p{color:#bdb3d2;font-size:14px;min-height:32px}
+.card button{margin-top:8px}
+.gamebox{display:none;margin-top:30px;padding:22px;background:#211a36;border-radius:17px;text-align:center}
+.gamebox h2{margin-top:0}
+#gameArea{margin:15px auto;max-width:500px}
+#gameArea button{margin:5px}
+#gameArea input{width:150px}
+#gameArea canvas{max-width:100%;background:#090713;border-radius:8px}
+footer{text-align:center;padding:30px;color:#8f85a7}
+</style>
+</head>
+<body>
+<header><div class="logo">⚡ TUNG GAMES</div><span>Play something fun!</span></header>
+<main>
+<section class="hero">
+<h1>Find Your Next Game 🎮</h1>
+<p>Quick games. Big fun. Play right in your browser.</p>
+<input id="search" placeholder="Search games..." oninput="renderGames()">
+</section>
+<div class="filters">
+<button class="active" onclick="setFilter('All',this)">All Games</button>
+<button onclick="setFilter('Arcade',this)">Arcade</button>
+<button onclick="setFilter('Puzzle',this)">Puzzle</button>
+<button onclick="setFilter('Classic',this)">Classic</button>
+<button onclick="setFilter('Favorites',this)">⭐ Favorites</button>
+</div>
+<section class="games" id="games"></section>
+<section class="gamebox" id="gamebox">
+<h2 id="gameTitle">Game</h2>
+<div id="gameArea"></div>
+<button onclick="closeGame()">Close Game</button>
+</section>
+</main>
+<footer>© 2026 Tung Games • Made for fun</footer>
+<script>
+const games=[
+{name:"Snake Dash",emoji:"🐍",category:"Arcade",desc:"Eat food and grow your snake!",id:"snake"},
+{name:"Memory Match",emoji:"🧠",category:"Puzzle",desc:"Find matching pairs of cards.",id:"memory"},
+{name:"Tic-Tac-Toe",emoji:"❎",category:"Classic",desc:"Play the classic X and O game.",id:"tic"},
+{name:"Reaction Test",emoji:"⚡",category:"Arcade",desc:"Test how quickly you react.",id:"reaction"},
+{name:"Number Guess",emoji:"🔢",category:"Puzzle",desc:"Guess the secret number.",id:"guess"},
+{name:"Star Clicker",emoji:"⭐",category:"Arcade",desc:"Click to collect as many stars as you can.",id:"click"}
+];
+let filter="All",favorites=[];
+function setFilter(f,b){filter=f;document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderGames()}
+function renderGames(){
+let q=document.getElementById("search").value.toLowerCase();
+document.getElementById("games").innerHTML=games.filter(g=>(filter==="All"||g.category===filter||(filter==="Favorites"&&favorites.includes(g.id)))&&(g.name.toLowerCase().includes(q)||g.desc.toLowerCase().includes(q))).map(g=>`
+<div class="card"><div class="emoji">${g.emoji}</div><h3>${g.name}</h3><p>${g.desc}</p><button onclick="play('${g.id}')">Play Now</button>
+<button onclick="favorite('${g.id}')">${favorites.includes(g.id)?"★ Saved":"☆ Favorite"}</button></div>`).join("")||"<p>No games found.</p>";
+}
+function favorite(id){favorites.includes(id)?favorites=favorites.filter(x=>x!==id):favorites.push(id);renderGames()}
+function closeGame(){document.getElementById("gamebox").style.display="none";document.getElementById("gameArea").innerHTML=""}
+function play(id){
+let box=document.getElementById("gamebox"),area=document.getElementById("gameArea");
+box.style.display="block";box.scrollIntoView({behavior:"smooth"});
+let g=games.find(x=>x.id===id);document.getElementById("gameTitle").textContent=g.name;
+if(id==="guess")guess(area);
+if(id==="click")clicker(area);
+if(id==="reaction")reaction(area);
+if(id==="tic")tic(area);
+if(id==="memory")memory(area);
+if(id==="snake")snake(area);
+}
+function guess(a){
+let n=Math.floor(Math.random()*20)+1;
+a.innerHTML=`<p>I'm thinking of a number from 1 to 20!</p><input id="guessInput" type="number" min="1" max="20" placeholder="Your guess"><button onclick="checkGuess()">Guess</button><p id="guessMsg"></p><button onclick="play('guess')">New Number</button>`;
+window.checkGuess=()=>{let v=Number(document.getElementById("guessInput").value);document.getElementById("guessMsg").textContent=!v?"Enter a number!":v===n?"🎉 Correct! You got it!":v<n?"Try a higher number!":"Try a lower number!"};
+}
+function clicker(a){
+a.innerHTML=`<h1 id="score">0 ⭐</h1><button onclick="document.getElementById('score').textContent=(Number(document.getElementById('score').textContent.split(' ')[0])+1)+' ⭐'">CLICK FOR STARS!</button><p>See how many stars you can collect.</p>`;
+}
+function reaction(a){
+a.innerHTML=`<p id="reactionMsg">Press start, then wait for green!</p><button id="reactionBtn" onclick="startReaction()">Start</button><p id="reactionResult"></p>`;
+}
+let reactionTimer,reactionStart,reactionReady=false;
+function startReaction(){
+let b=document.getElementById("reactionBtn"),m=document.getElementById("reactionMsg"),r=document.getElementById("reactionResult");
+clearTimeout(reactionTimer);reactionReady=false;b.disabled=true;b.style.background="#7955db";m.textContent="Wait for green...";r.textContent="";
+reactionTimer=setTimeout(()=>{reactionReady=true;reactionStart=performance.now();b.disabled=false;b.style.background="#20a45a";m.textContent="CLICK NOW!"},1500+Math.random()*3000);
+b.onclick=()=>{if(!reactionReady){clearTimeout(reactionTimer);m.textContent="Too soon! Try again.";b.disabled=false;b.style.background="#7955db";b.onclick=startReaction}else{r.textContent="Your time: "+Math.round(performance.now()-reactionStart)+" ms";b.disabled=false;b.style.background="#7955db";b.onclick=startReaction;m.textContent="Nice reaction! Press start to try again."}};
+}
+function tic(a){
+let cells=Array(9).fill(""),turn="X",done=false;
+a.innerHTML=`<h3 id="ticMsg">Your turn: X</h3><div id="ticGrid" style="display:grid;grid-template-columns:repeat(3,75px);justify-content:center;gap:5px"></div><button onclick="play('tic')">Restart</button>`;
+let grid=document.getElementById("ticGrid");
+cells.forEach((_,i)=>{let b=document.createElement("button");b.style.height="70px";b.style.fontSize="25px";b.textContent="";b.onclick=()=>{if(done||cells[i])return;cells[i]=turn;b.textContent=turn;let wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];let win=wins.some(w=>w.every(x=>cells[x]===turn));if(win||cells.every(Boolean)){done=true;document.getElementById("ticMsg").textContent=win?turn+" wins!":"It's a draw!"}else{turn=turn==="X"?"O":"X";document.getElementById("ticMsg").textContent="Your turn: "+turn}};grid.appendChild(b)});
+}
+function memory(a){
+let cards=["🐸","🐸","🍕","🍕","🚀","🚀","🐱","🐱","🌟","🌟","⚽","⚽"].sort(()=>Math.random()-.5),first=null,lock=false,matches=0;
+a.innerHTML=`<p>Find all six matching pairs!</p><div id="memoryGrid" style="display:grid;grid-template-columns:repeat(4,55px);justify-content:center;gap:7px"></div><p id="memoryMsg">Matches: 0 / 6</p><button onclick="play('memory')">Restart</button>`;
+let grid=document.getElementById("memoryGrid");
+cards.forEach((v,i)=>{let b=document.createElement("button");b.textContent="?";b.style.height="55px";b.style.fontSize="22px";b.onclick=()=>{if(lock||b.dataset.open||b.dataset.done)return;b.textContent=v;b.dataset.open="1";if(!first){first=b;return}if(first.textContent===v){first.dataset.done="1";b.dataset.done="1";first=null;matches++;document.getElementById("memoryMsg").textContent=matches===6?"You found every pair! 🎉":"Matches: "+matches+" / 6"}else{lock=true;let old=first;first=null;setTimeout(()=>{old.textContent="?";b.textContent="?";delete old.dataset.open;delete b.dataset.open;lock=false},700)}};grid.appendChild(b)});
+}
+function snake(a){
+a.innerHTML=`<p>Use arrow keys or WASD to move.</p><canvas id="snakeCanvas" width="300" height="300"></canvas><p id="snakeScore">Score: 0</p><button onclick="play('snake')">Restart</button>`;
+let c=document.getElementById("snakeCanvas"),ctx=c.getContext("2d"),snakeBody=[{x:10,y:10}],dir={x:1,y:0},food={x:5,y:5},score=0,alive=true;
+function key(e){let k=e.key.toLowerCase(),d={ArrowUp:{x:0,y:-1},w:{x:0,y:-1},ArrowDown:{x:0,y:1},s:{x:0,y:1},ArrowLeft:{x:-1,y:0},a:{x:-1,y:0},ArrowRight:{x:1,y:0},d:{x:1,y:0}}[e.key]||{x:0,y:0};if(d.x!==-dir.x||d.y!==-dir.y){if(d.x||d.y)dir=d}if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key))e.preventDefault()}
+document.addEventListener("keydown",key);
+let loop=setInterval(()=>{if(!alive){clearInterval(loop);document.removeEventListener("keydown",key);ctx.fillStyle="white";ctx.font="20px Arial";ctx.fillText("Game Over!",95,155);return}
+let head={x:snakeBody[0].x+dir.x,y:snakeBody[0].y+dir.y};
+if(head.x<0||head.y<0||head.x>=15||head.y>=15||snakeBody.some(p=>p.x===head.x&&p.y===head.y)){alive=false;return}
+snakeBody.unshift(head);
+if(head.x===food.x&&head.y===food.y){score++;food={x:Math.floor(Math.random()*15),y:Math.floor(Math.random()*15)};document.getElementById("snakeScore").textContent="Score: "+score}else snakeBody.pop();
+ctx.clearRect(0,0,300,300);ctx.fillStyle="#20c997";snakeBody.forEach(p=>ctx.fillRect(p.x*20,p.y*20,18,18));ctx.fillStyle="#ff5577";ctx.fillRect(food.x*20,food.y*20,18,18);
+},140);
+}
+renderGames();
+</script>
+</body>
+</html>
